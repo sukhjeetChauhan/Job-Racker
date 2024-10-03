@@ -1,0 +1,13 @@
+# Node.js
+node_modules/
+
+# Python
+django-backend/env/
+*.pyc
+__pycache__/
+
+# Ignore environment files
+.env
+
+# MacOS specific
+.DS_Store
