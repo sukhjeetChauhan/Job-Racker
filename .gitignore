@@ -2,7 +2,7 @@
 node_modules/
 
 # Python
-django-backend/env/
+django-backend/venv/
 *.pyc
 __pycache__/
 
