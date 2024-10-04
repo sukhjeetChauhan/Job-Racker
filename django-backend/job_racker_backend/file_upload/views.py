@@ -27,11 +27,11 @@ def upload_pdf(request):
 
         # Summarize the text using AI
         # Assuming you have an AI model set up
-        # summary = get_ai_summary(text)
+        summary = get_ai_summary(text)
 
-        return Response({'summary': text}, status=status.HTTP_200_OK)
+        return Response({'summary': summary}, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 def get_ai_summary(text):
     
-    return summarizer(text, max_length=130, min_length=30, do_sample=False)
+    return summarizer(text, max_length=500, min_length=100, do_sample=False)

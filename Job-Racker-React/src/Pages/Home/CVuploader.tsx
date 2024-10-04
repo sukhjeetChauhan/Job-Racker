@@ -33,7 +33,7 @@ function CVUploader() {
         }
       )
       .then((response) => {
-        setSummary(response.data.summary)
+        setSummary(response.data.summary[0].summary_text)
       })
       .catch((error) => {
         console.error('Error uploading PDF:', error)
@@ -46,17 +46,18 @@ function CVUploader() {
   })
 
   return (
-    <div
-      {...getRootProps()}
-      className="flex items-center justify-center w-96 h-48 border-2 border-dashed border-blue-500 rounded-lg bg-gray-50 text-gray-700 cursor-pointer mt-10 p-4"
-    >
-      <input {...getInputProps()} />
-      {file ? (
-        <p>{file.name}</p>
-      ) : (
-        <p>Drag & drop a PDF or Word document here, or click to select one</p>
-      )}
-
+    <div className="flex flex-col gap-8 items-center justify-center">
+      <div
+        {...getRootProps()}
+        className="flex items-center justify-center w-96 h-48 border-2 border-dashed border-blue-500 rounded-lg bg-gray-50 text-gray-700 cursor-pointer mt-10 p-4"
+      >
+        <input {...getInputProps()} />
+        {file ? (
+          <p>{file.name}</p>
+        ) : (
+          <p>Drag & drop a PDF or Word document here, or click to select one</p>
+        )}
+      </div>
       {summary && (
         <div>
           <h2>Summary:</h2>
