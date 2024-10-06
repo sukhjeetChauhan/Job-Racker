@@ -1,6 +1,6 @@
 import { Route, createRoutesFromElements } from 'react-router-dom'
 import App from './App'
-import Home from './Pages/Home/Home'
+import Home from './Pages/Home'
 
 const routes = createRoutesFromElements(
   <>

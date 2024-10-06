@@ -1,5 +1,5 @@
 import { useDropzone, Accept } from 'react-dropzone'
-import axios from 'axios'
+
 import { useState, useCallback } from 'react'
 
 const acceptFormats: Accept = {
@@ -12,7 +12,6 @@ const acceptFormats: Accept = {
 
 function CVUploader() {
   const [file, setFile] = useState<File | null>(null)
-  const [summary, setSummary] = useState<string>('')
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const uploadedFile = acceptedFiles[0]
@@ -21,23 +20,6 @@ function CVUploader() {
     // Send the file to the backend
     const formData = new FormData()
     formData.append('pdf', uploadedFile)
-
-    axios
-      .post<{ summary: string }>(
-        'http://localhost:8000/api/upload-pdf/',
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        }
-      )
-      .then((response) => {
-        setSummary(response.data.summary[0].summary_text)
-      })
-      .catch((error) => {
-        console.error('Error uploading PDF:', error)
-      })
   }, [])
 
   const { getRootProps, getInputProps } = useDropzone({
@@ -46,10 +28,13 @@ function CVUploader() {
   })
 
   return (
-    <div className="flex flex-col gap-8 items-center justify-center">
+    <div className="flex flex-col gap-4 mt-10 items-center">
+      <h2 className="text-blue-500 capitalize text-xl font-semibold">
+        CV Upload
+      </h2>
       <div
         {...getRootProps()}
-        className="flex items-center justify-center w-96 h-48 border-2 border-dashed border-blue-500 rounded-lg bg-gray-50 text-gray-700 cursor-pointer mt-10 p-4"
+        className="flex items-center justify-center w-96 h-48 border-2 border-dashed border-blue-500 rounded-lg bg-gray-50 text-gray-700 cursor-pointer p-4"
       >
         <input {...getInputProps()} />
         {file ? (
@@ -58,12 +43,6 @@ function CVUploader() {
           <p>Drag & drop a PDF or Word document here, or click to select one</p>
         )}
       </div>
-      {summary && (
-        <div>
-          <h2>Summary:</h2>
-          <p>{summary}</p>
-        </div>
-      )}
     </div>
   )
 }
