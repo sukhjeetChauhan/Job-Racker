@@ -1,16 +1,30 @@
-import { useState, useCallback, ClipboardEvent } from 'react'
+import { useCallback, ClipboardEvent } from 'react'
 import { useDropzone } from 'react-dropzone'
 
-export default function JobDescUploader() {
-  const [file, setFile] = useState<File | null>(null)
-  const [pastedText, setPastedText] = useState<string>('')
+interface JobDescUploaderProps {
+  jobDescFile: File | null // jobDescFile is a File object or null
+  setJobDescFile: (file: File | null) => void // Function to set the jobDescFile state
+  pastedText: string // pastedText is a string
+  setPastedText: (text: string) => void // Function to set the pastedText state
+}
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    // Handle file drop
-    if (acceptedFiles.length) {
-      setFile(acceptedFiles[0]) // Set the dropped file (e.g., an image)
-    }
-  }, [])
+export default function JobDescUploader({
+  jobDescFile,
+  setJobDescFile,
+  pastedText,
+  setPastedText,
+}: JobDescUploaderProps) {
+  // const [file, setFile] = useState<File | null>(null)
+
+  const onDrop = useCallback(
+    (acceptedFiles: File[]) => {
+      // Handle file drop
+      if (acceptedFiles.length) {
+        setJobDescFile(acceptedFiles[0]) // Set the dropped file (e.g., an image)
+      }
+    },
+    [setJobDescFile]
+  )
 
   const onPaste = (event: ClipboardEvent<HTMLDivElement>) => {
     // Handle pasted text
@@ -43,7 +57,7 @@ export default function JobDescUploader() {
         {!pastedText && (
           <p>Drag & drop an image here, or paste text with Ctrl+V</p>
         )}
-        {file && <p>Uploaded file: {file.name}</p>}
+        {jobDescFile && <p>Uploaded file: {jobDescFile.name}</p>}
         {pastedText && <p>{pastedText}</p>}
       </div>
 

@@ -1,7 +1,7 @@
 # file_upload/urls.py
 from django.urls import path
-from .views import upload_pdf
+from .views import compare_ai
 
 urlpatterns = [
-    path('upload-pdf/', upload_pdf, name='upload-pdf'),
+    path('compare-ai/', compare_ai, name='compare-ai'),
 ]

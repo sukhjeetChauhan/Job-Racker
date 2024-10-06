@@ -1,6 +1,11 @@
 import { useDropzone, Accept } from 'react-dropzone'
 
-import { useState, useCallback } from 'react'
+import { useCallback } from 'react'
+
+interface CVUploaderProps {
+  CVfile: File | null // CVfile is a File object or null
+  setCVFile: (file: File | null) => void // setCVFile is a function that updates the CVfile state
+}
 
 const acceptFormats: Accept = {
   'application/pdf': ['.pdf'],
@@ -10,17 +15,20 @@ const acceptFormats: Accept = {
   ],
 }
 
-function CVUploader() {
-  const [file, setFile] = useState<File | null>(null)
+function CVUploader({ CVfile, setCVFile }: CVUploaderProps) {
+  // const [file, setFile] = useState<File | null>(null)
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    const uploadedFile = acceptedFiles[0]
-    setFile(uploadedFile)
+  const onDrop = useCallback(
+    (acceptedFiles: File[]) => {
+      const uploadedFile = acceptedFiles[0]
+      setCVFile(uploadedFile)
 
-    // Send the file to the backend
-    const formData = new FormData()
-    formData.append('pdf', uploadedFile)
-  }, [])
+      // Send the file to the backend
+      const formData = new FormData()
+      formData.append('pdf', uploadedFile)
+    },
+    [setCVFile]
+  )
 
   const { getRootProps, getInputProps } = useDropzone({
     onDrop,
@@ -37,8 +45,8 @@ function CVUploader() {
         className="flex items-center justify-center w-96 h-48 border-2 border-dashed border-blue-500 rounded-lg bg-gray-50 text-gray-700 cursor-pointer p-4"
       >
         <input {...getInputProps()} />
-        {file ? (
-          <p>{file.name}</p>
+        {CVfile ? (
+          <p>{CVfile.name}</p>
         ) : (
           <p>Drag & drop a PDF or Word document here, or click to select one</p>
         )}
