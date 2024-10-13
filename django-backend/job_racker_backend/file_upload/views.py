@@ -1,20 +1,33 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
-from rest_framework.parsers import MultiPartParser, FormParser
+from .serializers import JobApplicationSerializer
 import pdfplumber
-from transformers import pipeline
 from PIL import Image
+import pytesseract  # For OCR
+from django.conf import settings
+from openai import OpenAI
+from pdf2image import convert_from_bytes
+from rest_framework import status
 
-# Global model load (loaded once and reused)
-ocr_pipeline = pipeline("image-to-text", model="microsoft/trocr-base-printed")
-keyword_extractor = pipeline("ner", grouped_entities=True, model="dbmdz/bert-large-cased-finetuned-conll03-english")
+# Initialize OpenAI client
+client = OpenAI(api_key=settings.OPENAI_API_KEY)
+
+
+@api_view(['POST'])
+def create_job_application(request):
+    if request.method == 'POST':
+        serializer = JobApplicationSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()  # Save the job application without associating it with a user
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
 def compare_ai(request):
     """
-    Compare CV and job description (image or text) and return keyword match percentage.
+    Compare CV and job description (image or text) and return a similarity analysis using OpenAI.
     """
     # Extract CV file from the request
     cv_file = request.FILES.get('cv')
@@ -30,62 +43,81 @@ def compare_ai(request):
 
     # Extract text from job description (Image or Text)
     if job_desc_file and job_desc_file.content_type.startswith('image/'):
-        job_desc_text = extract_text_from_image(job_desc_file)  # Extract text from image using the preloaded model
+        job_desc_text = extract_text_from_image(job_desc_file)  # Extract text from image
+    elif not job_desc_text and job_desc_file:
+        job_desc_text = extract_text_from_pdf(job_desc_file)  # Extract text if job description is also a PDF
     elif not job_desc_text:
         raise ValidationError("No job description provided")
 
-    # Extract keywords from both the CV and job description
-    cv_keywords = extract_keywords(cv_text)
-    job_desc_keywords = extract_keywords(job_desc_text)
+    # Use OpenAI to compare the resume and job description
+    comparison_result = compare_cv_and_job_description(cv_text, job_desc_text)
 
-    # Compare keywords and calculate match percentage
-    match_percentage, missing_keywords = compare_keywords(cv_keywords, job_desc_keywords)
-
-    # Return match percentage and missing keywords in the response
+    # Return the analysis in the response
     return Response({
-        'match_percentage': match_percentage,
-        'missing_keywords': missing_keywords
+        'comparison_result': comparison_result,
+        # 'text': cv_text
     })
 
 
 def extract_text_from_pdf(pdf_file):
-    """Extract text from a PDF file."""
+    """Extract text from a PDF file (handles both text-based and image-based)."""
+    text = ''
+    pdf_file.seek(0)  # Reset file pointer in case it was previously read
+    
+    # First attempt: Extract text using pdfplumber (text-based PDF)
     with pdfplumber.open(pdf_file) as pdf:
-        text = ''
         for page in pdf.pages:
-            text += page.extract_text() + ' '
-    return text.strip()
+            page_text = page.extract_text()
+            if page_text:
+                text += page_text + ' '
+    
+    if text.strip():  # If text was successfully extracted using pdfplumber
+        return text.strip()
+    
+    # Second attempt: Use OCR if no text was extracted (likely image-based PDF)
+    pdf_file.seek(0)  # Reset file pointer again for OCR
+    pdf_bytes = pdf_file.read()  # Read the entire PDF as bytes
+    pages = convert_from_bytes(pdf_bytes)  # Convert PDF pages to images
+    
+    for page_image in pages:
+        page_text = pytesseract.image_to_string(page_image)
+        text += page_text + ' '
+    
+    return text.strip()  # Return extracted text (either from OCR or pdfplumber)
 
 
 def extract_text_from_image(image_file):
-    """Use the preloaded Hugging Face model to extract text from an image."""
+    """Extract text from an image file using Tesseract OCR."""
     image = Image.open(image_file)
-    
-    # Use preloaded OCR model
-    text = ocr_pipeline(image)
-    
-    extracted_text = text[0]['generated_text'] if text else ''
-    return extracted_text.strip()
+    text = pytesseract.image_to_string(image)
+    return text.strip()
 
 
-def extract_keywords(text):
-    """Use preloaded Hugging Face pipeline to extract keywords from the text."""
-    # Use preloaded NER model
-    entities = keyword_extractor(text)
-    
-    # Extract keywords from the entities
-    keywords = {entity['word'] for entity in entities if entity['entity_group'] in ['ORG', 'MISC', 'PER', 'LOC']}
-    return keywords
+def compare_cv_and_job_description(cv_text, job_desc_text):
+    """Use OpenAI to compare CV and job description text."""
+    # Create a prompt for OpenAI to compare the CV and job description
+    prompt = f"""
+    I want you to compare the following resume (CV) and job description. Provide an analysis of how well the resume matches the job description (percentage), highlighting the strengths, missing skills, and overall suitability. 
 
+    Resume:
+    {cv_text}
 
-def compare_keywords(cv_keywords, job_desc_keywords):
-    """Compare extracted keywords from CV and job description."""
-    # Calculate intersection and differences between keyword sets
-    matched_keywords = cv_keywords.intersection(job_desc_keywords)
-    missing_keywords = job_desc_keywords - cv_keywords
+    Job Description:
+    {job_desc_text}
 
-    # Calculate match percentage
-    total_job_keywords = len(job_desc_keywords)
-    match_percentage = (len(matched_keywords) / total_job_keywords) * 100 if total_job_keywords > 0 else 0
+    Provide your analysis:
+    """
 
-    return round(match_percentage, 2), list(missing_keywords)
+    # Make the OpenAI API call using chat completion
+    completion = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": prompt}
+        ]
+    )
+
+    # Extract the generated response
+    comparison = completion.choices[0].message.content
+
+    return comparison
