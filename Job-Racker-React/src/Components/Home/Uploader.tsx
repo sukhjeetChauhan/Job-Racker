@@ -1,8 +1,9 @@
 import { ChangeEvent, useState } from 'react'
-import CVUploader from './Home/CVuploader'
-import JobDescUploader from './Home/JobDescUploader'
+import CVUploader from './uploader-Subcomponent/CVuploader'
+import JobDescUploader from './uploader-Subcomponent/JobDescUploader'
 import axios from 'axios'
 import ReactMarkdown from 'react-markdown'
+import { useNavigate } from 'react-router-dom'
 
 // Define TypeScript types for the result state
 type SuccessResult = {
@@ -23,6 +24,8 @@ export default function Uploader() {
   const [loading, setLoading] = useState<boolean>(false) // Loading state for spinner
   const [title, setTitle] = useState<string>('')
   const [companyName, setCompanyName] = useState<string>('')
+
+  const navigate = useNavigate()
 
   async function analyzeByAi(): Promise<void> {
     setLoading(true) // Start loading
@@ -70,6 +73,7 @@ export default function Uploader() {
   }
 
   async function createJob() {
+    setLoading(true)
     if (title !== '' && companyName !== '') {
       const response = await axios.post('http://localhost:8000/api/apply/', {
         job_title: title,
@@ -79,6 +83,8 @@ export default function Uploader() {
 
       if (response.status === 201) {
         console.log('Job application submitted:', response.data)
+        setLoading(false)
+        navigate('/jobs')
       } else {
         console.error('Failed to submit job application:', response.status)
       }
@@ -152,6 +158,16 @@ export default function Uploader() {
         >
           Rack This Job
         </button>
+      )}
+      {loading && result && (
+        <div className="flex justify-center items-center">
+          <div
+            className="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full"
+            role="status"
+          >
+            <span className="visually-hidden">--</span>
+          </div>
+        </div>
       )}
     </div>
   )

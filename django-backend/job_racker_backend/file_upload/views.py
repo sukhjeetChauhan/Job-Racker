@@ -2,6 +2,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 from .serializers import JobApplicationSerializer
+from .models import JobApplication
 import pdfplumber
 from PIL import Image
 import pytesseract  # For OCR
@@ -14,14 +15,40 @@ from rest_framework import status
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
 
-@api_view(['POST'])
+
+
+@api_view(['GET', 'POST'])
 def create_job_application(request):
-    if request.method == 'POST':
+    if request.method == 'GET':
+        # Retrieve all job applications
+        applications = JobApplication.objects.all()
+        serializer = JobApplicationSerializer(applications, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    elif request.method == 'POST':
+        # Create a new job application
         serializer = JobApplicationSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()  # Save the job application without associating it with a user
+            serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['PUT'])
+def update_job_application_status(request, pk):
+    try:
+        # Retrieve the job application by ID
+        job_application = JobApplication.objects.get(pk=pk)
+    except JobApplication.DoesNotExist:
+        return Response({'error': 'Job application not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    # Only update the status field
+    if 'status' in request.data:
+        job_application.status = request.data['status']
+        job_application.save()
+        return Response({'message': 'Status updated successfully'}, status=status.HTTP_200_OK)
+    
+    return Response({'error': 'Invalid data'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])

@@ -8,4 +8,4 @@ class PDFUploadSerializer(serializers.Serializer):
 class JobApplicationSerializer(serializers.ModelSerializer):
     class Meta:
         model = JobApplication
-        fields = ['job_title', 'company_name', 'status', 'date_applied']
+        fields = ['id','job_title', 'company_name', 'status', 'date_applied']
