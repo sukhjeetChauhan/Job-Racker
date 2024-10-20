@@ -55,6 +55,7 @@ export default function Uploader() {
 
       // Handle successful response
       setResult(response.data)
+      // console.log(response.data)
     } catch (error) {
       console.error('Error submitting data:', error)
       setResult({ error: 'Failed to process your request' })
@@ -140,7 +141,7 @@ export default function Uploader() {
         </button>
       )}
       {result && (
-        <div className="w-4/5 p-12 bg-blue-100 rounded">
+        <div className="w-4/5 p-12 bg-blue-100 rounded shadow-lg">
           <h2 className="text-2xl font-semibold text-blue-500 mb-8">Result</h2>
           {'error' in result ? (
             <p style={{ color: 'red' }}>{result.error}</p>

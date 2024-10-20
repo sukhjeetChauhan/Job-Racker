@@ -82,7 +82,7 @@ def compare_ai(request):
     # Return the analysis in the response
     return Response({
         'comparison_result': comparison_result,
-        # 'text': cv_text
+        # 'text': job_desc_text
     })
 
 
@@ -124,7 +124,15 @@ def compare_cv_and_job_description(cv_text, job_desc_text):
     """Use OpenAI to compare CV and job description text."""
     # Create a prompt for OpenAI to compare the CV and job description
     prompt = f"""
-    I want you to compare the following resume (CV) and job description. Provide an analysis of how well the resume matches the job description (percentage), highlighting the strengths, missing skills, and overall suitability. 
+     I want you to analyze the following resume (CV) and job description to assess how well the resume matches the job requirements. Provide the following details in your analysis:
+
+      1. **Match Percentage**: Estimate how well the skills and experience in the resume align with the job description, giving a percentage score.
+      
+      2. **Strengths**: List the key skills, qualifications, and experiences from the resume that match the job requirements. Highlight any areas where the candidate exceeds expectations.
+
+      3. **Missing Skills**: Identify the skills, qualifications, or experiences mentioned in the job description that are not found in the resume.
+
+      4. **Suitability**: Provide an overall evaluation of the candidate’s suitability for the job. Mention whether the candidate is a good fit, and if any gaps are significant enough to impact their chances.
 
     Resume:
     {cv_text}
