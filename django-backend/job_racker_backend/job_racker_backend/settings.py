@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    'authentication',
      'corsheaders',
     'rest_framework',
     'file_upload',  # Your app
