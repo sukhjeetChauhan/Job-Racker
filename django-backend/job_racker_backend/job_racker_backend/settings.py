@@ -30,7 +30,16 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+
+# Allow requests from your frontend's URL
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:5173',  # Your React app's origin
+]
+
+# Enable CSRF for session-based authentication
+CSRF_TRUSTED_ORIGINS = ["http://localhost:5173"]
 
 # Application definition
 
@@ -142,3 +151,8 @@ load_dotenv()
 
 # Get OpenAI API key
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+
+# session cookies
+
+SESSION_COOKIE_SAMESITE = 'None'  # This is important for cross-site cookies
+SESSION_COOKIE_SECURE = False  # Set this to True if using HTTPS

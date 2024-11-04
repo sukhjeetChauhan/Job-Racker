@@ -11,6 +11,8 @@ class RegisterUserView(APIView):
     def post(self, request):
         username = request.data.get("username")
         password = request.data.get("password")
+        first_name = request.data.get("first_name")
+        last_name = request.data.get("last_name")
         
         # Check if the username already exists
         if User.objects.filter(username=username).exists():
@@ -19,7 +21,10 @@ class RegisterUserView(APIView):
         # Create the new user
         user = User.objects.create(
             username=username,
-            password=make_password(password)
+            password=make_password(password),
+            first_name=first_name,
+            last_name=last_name
+            
         )
         
         # Authenticate and log in the user
@@ -49,7 +54,9 @@ class LogoutUserView(APIView):
 
 class SessionStatusView(APIView):
     def get(self, request):
+        print(request.user)
         if request.user.is_authenticated:
             return JsonResponse({"isLoggedIn": True, "username": request.user.username}, status=status.HTTP_200_OK)
         else:
-            return JsonResponse({"isLoggedIn": False}, status=status.HTTP_200_OK)
+            print("User not authenticated")  # Debugging line
+            return JsonResponse({"isLoggedIn": False, "username": '' }, status=status.HTTP_200_OK)

@@ -5,6 +5,8 @@ import { AxiosError } from 'axios'
 const LoginComponent = () => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
   const [isRegisterMode, setIsRegisterMode] = useState(false) // Toggle between login and register
   const [message, setMessage] = useState('')
 
@@ -24,7 +26,7 @@ const LoginComponent = () => {
 
   const handleRegister = async () => {
     try {
-      await registerUser(username, password)
+      await registerUser(username, password, firstName, lastName)
       setMessage('User registered successfully. You can now log in.')
       setIsRegisterMode(false)
     } catch (error) {
@@ -54,6 +56,34 @@ const LoginComponent = () => {
         </h2>
         {message && <p className="text-red-600 text-center mb-4">{message}</p>}
         <form onSubmit={handleSubmit}>
+          {isRegisterMode && (
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">
+                First Name
+              </label>
+              <input
+                type="text"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          )}
+          {isRegisterMode && (
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">
+                Last Name
+              </label>
+              <input
+                type="text"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          )}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700">
               Username

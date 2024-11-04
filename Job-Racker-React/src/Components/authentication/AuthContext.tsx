@@ -2,10 +2,12 @@
 import React, { createContext, useState, useEffect } from 'react'
 import axios from 'axios'
 
+axios.defaults.withCredentials = true
+
 // Define the shape of the context value
 export interface AuthContextType {
   isLoggedIn: boolean
-  setIsLoggedIn: (loggedIn: boolean) => void
+  user: string
 }
 
 // Define props for the AuthProvider, including children
@@ -18,13 +20,18 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [user, setUser] = useState('')
 
   const checkSession = async () => {
     try {
-      const response = await axios.get('/api/auth/session-status/', {
-        withCredentials: true,
-      })
+      const response = await axios.get(
+        'http://localhost:8000/api/auth/session-status/',
+        {
+          withCredentials: true,
+        }
+      )
       setIsLoggedIn(response.data.isLoggedIn)
+      setUser(response.data.username)
     } catch (error) {
       console.log(error)
       setIsLoggedIn(false)
@@ -33,10 +40,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     checkSession()
-  }, [])
+  }, [isLoggedIn])
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, setIsLoggedIn }}>
+    <AuthContext.Provider value={{ isLoggedIn, user }}>
       {children}
     </AuthContext.Provider>
   )
