@@ -14,6 +14,7 @@ from django.conf import settings
 from openai import OpenAI
 from pdf2image import convert_from_bytes
 from rest_framework import status
+from docx import Document
 
 # Initialize OpenAI client
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
@@ -93,6 +94,7 @@ def compare_ai(request):
 
         # Extract text from CV (PDF)
         cv_text = extract_text_from_pdf(cv_file)
+        print(cv_text)
 
         # Extract text from job description (Image or Text)
         if job_desc_file and job_desc_file.content_type.startswith('image/'):
@@ -113,31 +115,43 @@ def compare_ai(request):
     return JsonResponse({'error': "Method not allowed"}, status=405)
 
 
-def extract_text_from_pdf(pdf_file):
-    """Extract text from a PDF file (handles both text-based and image-based)."""
+def extract_text_from_pdf(file):
+    """Extract text from PDF or Word (.docx) file."""
     text = ''
-    pdf_file.seek(0)  # Reset file pointer in case it was previously read
+    file_name = file.name.lower()
     
-    # First attempt: Extract text using pdfplumber (text-based PDF)
-    with pdfplumber.open(pdf_file) as pdf:
-        for page in pdf.pages:
-            page_text = page.extract_text()
-            if page_text:
-                text += page_text + ' '
+    # Check the file extension to determine processing type
+    if file_name.endswith('.pdf'):
+        file.seek(0)  # Reset file pointer in case it was previously read
+        # First attempt: Extract text using pdfplumber (text-based PDF)
+        with pdfplumber.open(file) as pdf:
+            for page in pdf.pages:
+                page_text = page.extract_text()
+                if page_text:
+                    text += page_text + ' '
+        
+        if text.strip():  # If text was successfully extracted using pdfplumber
+            return text.strip()
+        
+        # Second attempt: Use OCR if no text was extracted (likely image-based PDF)
+        file.seek(0)  # Reset file pointer again for OCR
+        pdf_bytes = file.read()  # Read the entire PDF as bytes
+        pages = convert_from_bytes(pdf_bytes)  # Convert PDF pages to images
+        
+        for page_image in pages:
+            page_text = pytesseract.image_to_string(page_image)
+            text += page_text + ' '
+        
+    elif file_name.endswith('.docx'):
+        # Process Word file
+        doc = Document(file)
+        for paragraph in doc.paragraphs:
+            text += paragraph.text + ' '
+
+    else:
+        raise ValueError("Unsupported file type. Only .pdf and .docx files are supported.")
     
-    if text.strip():  # If text was successfully extracted using pdfplumber
-        return text.strip()
-    
-    # Second attempt: Use OCR if no text was extracted (likely image-based PDF)
-    pdf_file.seek(0)  # Reset file pointer again for OCR
-    pdf_bytes = pdf_file.read()  # Read the entire PDF as bytes
-    pages = convert_from_bytes(pdf_bytes)  # Convert PDF pages to images
-    
-    for page_image in pages:
-        page_text = pytesseract.image_to_string(page_image)
-        text += page_text + ' '
-    
-    return text.strip()  # Return extracted text (either from OCR or pdfplumber)
+    return text.strip()
 
 
 def extract_text_from_image(image_file):
