@@ -8,6 +8,7 @@ axios.defaults.withCredentials = true
 export interface AuthContextType {
   isLoggedIn: boolean
   user: string
+  firstName: string
 }
 
 // Define props for the AuthProvider, including children
@@ -21,6 +22,7 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [user, setUser] = useState('')
+  const [firstName, setFirstName] = useState('')
 
   const checkSession = async () => {
     try {
@@ -32,6 +34,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       )
       setIsLoggedIn(response.data.isLoggedIn)
       setUser(response.data.username)
+      setFirstName(response.data.firstname)
     } catch (error) {
       console.log(error)
       setIsLoggedIn(false)
@@ -43,7 +46,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [isLoggedIn])
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, user }}>
+    <AuthContext.Provider value={{ isLoggedIn, user, firstName }}>
       {children}
     </AuthContext.Provider>
   )

@@ -49,7 +49,9 @@ export default function Uploader() {
         {
           headers: {
             'Content-Type': 'multipart/form-data',
+            // 'X-CSRFToken': csrfToken, // Include CSRF token here
           },
+          // withCredentials: true,
         }
       )
 
@@ -76,11 +78,19 @@ export default function Uploader() {
   async function createJob() {
     setLoading(true)
     if (title !== '' && companyName !== '') {
-      const response = await axios.post('http://localhost:8000/api/apply/', {
-        job_title: title,
-        company_name: companyName,
-        status: 'applied',
-      })
+      const response = await axios.post(
+        'http://localhost:8000/api/apply/',
+        {
+          job_title: title,
+          company_name: companyName,
+          status: 'applied',
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      )
 
       if (response.status === 201) {
         console.log('Job application submitted:', response.data)

@@ -3,7 +3,9 @@ import { Status } from '../Pages/JobsPage'
 
 export async function getAllJobs() {
   try {
-    const response = await axios.get('http://localhost:8000/api/apply/')
+    const response = await axios.get('http://localhost:8000/api/apply/', {
+      withCredentials: true, // Ensures the session is sent
+    })
     return response.data
   } catch (error) {
     console.log(`Response: ${error}`)

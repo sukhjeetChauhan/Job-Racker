@@ -6,6 +6,7 @@ class PDFUploadSerializer(serializers.Serializer):
 
 
 class JobApplicationSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username', read_only=True)
     class Meta:
         model = JobApplication
-        fields = ['id','job_title', 'company_name', 'status', 'date_applied']
+        fields = ['id','job_title', 'company_name', 'status','username', 'date_applied']

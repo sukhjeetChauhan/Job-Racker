@@ -57,14 +57,14 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-  'corsheaders.middleware.CorsMiddleware',
-    "django.middleware.security.SecurityMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
-    "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
-    "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "django.contrib.messages.middleware.MessageMiddleware",
-    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+  "corsheaders.middleware.CorsMiddleware",
+  "django.middleware.security.SecurityMiddleware",
+  "django.contrib.sessions.middleware.SessionMiddleware",
+  "django.middleware.common.CommonMiddleware",
+  "django.middleware.csrf.CsrfViewMiddleware",
+  "django.contrib.auth.middleware.AuthenticationMiddleware",
+  "django.contrib.messages.middleware.MessageMiddleware",
+  "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
 ROOT_URLCONF = "job_racker_backend.urls"
@@ -154,5 +154,12 @@ OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
 # session cookies
 
+# Set session engine if it's not already set
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Default, using database for sessions
+# Other common session settings (optional)
+SESSION_COOKIE_NAME = 'sessionid'  # Default cookie name
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # Keep the session alive after closing the browser
+
+
 SESSION_COOKIE_SAMESITE = 'None'  # This is important for cross-site cookies
-SESSION_COOKIE_SECURE = False  # Set this to True if using HTTPS
+SESSION_COOKIE_SECURE = True  # Set this to True if using HTTPS

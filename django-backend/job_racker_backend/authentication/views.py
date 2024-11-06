@@ -56,7 +56,7 @@ class SessionStatusView(APIView):
     def get(self, request):
         print(request.user)
         if request.user.is_authenticated:
-            return JsonResponse({"isLoggedIn": True, "username": request.user.username}, status=status.HTTP_200_OK)
+            return JsonResponse({"isLoggedIn": True, "username": request.user.username, "firstname": request.user.first_name}, status=status.HTTP_200_OK)
         else:
             print("User not authenticated")  # Debugging line
-            return JsonResponse({"isLoggedIn": False, "username": '' }, status=status.HTTP_200_OK)
+            return JsonResponse({"isLoggedIn": False, "username": '',"firstname": '' }, status=status.HTTP_200_OK)

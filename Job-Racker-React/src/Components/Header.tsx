@@ -1,8 +1,11 @@
+import { useContext } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { AuthContext } from './authentication/AuthContext'
 
 export default function Header() {
   const navigate = useNavigate()
-
+  const user = useContext(AuthContext)
+  console.log(user?.firstName)
   function navigateToJobs() {
     navigate('/jobs')
   }
@@ -12,7 +15,16 @@ export default function Header() {
   }
 
   return (
-    <div className="w-full p-12 flex justify-end">
+    <div className="w-full p-12 flex justify-between">
+      <div>
+        <p className="text-blue-500 text-xl font-semibold">{`Welcome ${
+          user?.user !== ''
+            ? user?.firstName !== ''
+              ? user?.firstName
+              : user?.user
+            : ''
+        }`}</p>
+      </div>
       <div className="flex gap-2">
         <button
           onClick={navigateToLogin}

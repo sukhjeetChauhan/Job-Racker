@@ -1,8 +1,12 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework.exceptions import ValidationError
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
+from django.http import JsonResponse
 from .serializers import JobApplicationSerializer
 from .models import JobApplication
+import json
 import pdfplumber
 from PIL import Image
 import pytesseract  # For OCR
@@ -17,73 +21,96 @@ client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
 
 
-@api_view(['GET', 'POST'])
+
+@csrf_exempt
+@login_required  # Ensures the user is authenticated
 def create_job_application(request):
+    user = request.user  # Get the authenticated user
+
     if request.method == 'GET':
-        # Retrieve all job applications
-        applications = JobApplication.objects.all()
+        # Retrieve only the job applications for the authenticated user
+        applications = JobApplication.objects.filter(user=user)
         serializer = JobApplicationSerializer(applications, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    
+        return JsonResponse(serializer.data, safe=False, status=200)
+
     elif request.method == 'POST':
-        # Create a new job application
-        serializer = JobApplicationSerializer(data=request.data)
+        # Load the JSON data from the request body
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+        print('Received data:', data)  # Log the received data
+        serializer = JobApplicationSerializer(data=data)
+
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            job_application = serializer.save(user=user)  # Automatically set the user field to the authenticated user
+            return JsonResponse(serializer.data, status=201)
+
+        print('Validation errors:', serializer.errors)  # Print validation errors for debugging
+        return JsonResponse(serializer.errors, status=400)
+
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
 
 
-@api_view(['PUT'])
+
+@csrf_exempt
 def update_job_application_status(request, pk):
-    try:
-        # Retrieve the job application by ID
-        job_application = JobApplication.objects.get(pk=pk)
-    except JobApplication.DoesNotExist:
-        return Response({'error': 'Job application not found'}, status=status.HTTP_404_NOT_FOUND)
-    
-    # Only update the status field
-    if 'status' in request.data:
-        job_application.status = request.data['status']
-        job_application.save()
-        return Response({'message': 'Status updated successfully'}, status=status.HTTP_200_OK)
-    
-    return Response({'error': 'Invalid data'}, status=status.HTTP_400_BAD_REQUEST)
+    if request.method == 'PUT':
+        try:
+            job_application = JobApplication.objects.get(pk=pk)
+        except JobApplication.DoesNotExist:
+            return JsonResponse({'error': 'Job application not found'}, status=404)
+        
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON format'}, status=400)
 
+        if 'status' in data:
+            job_application.status = data['status']
+            job_application.save()
+            return JsonResponse({'message': 'Status updated successfully'}, status=200)
 
-@api_view(['POST'])
+        return JsonResponse({'error': 'Status field is required'}, status=400)
+    
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+@csrf_exempt
 def compare_ai(request):
-    """
-    Compare CV and job description (image or text) and return a similarity analysis using OpenAI.
-    """
-    # Extract CV file from the request
-    cv_file = request.FILES.get('cv')
-    job_desc_file = request.FILES.get('job_desc')
-    job_desc_text = request.data.get('job_desc_text')  # In case job description is provided as text
+    if request.method == "POST":
+        """
+        Compare CV and job description (image or text) and return a similarity analysis using OpenAI.
+        """
+        # Extract CV file from the request
+        cv_file = request.FILES.get('cv')
+        job_desc_file = request.FILES.get('job_desc')
+        job_desc_text = request.POST.get('job_desc_text')  # In case job description is provided as text
 
-    # Validate the presence of the CV file
-    if not cv_file:
-        raise ValidationError("No CV file uploaded")
+        # Validate the presence of the CV file
+        if not cv_file:
+            return JsonResponse({'error': "No CV file uploaded"}, status=400)
 
-    # Extract text from CV (PDF)
-    cv_text = extract_text_from_pdf(cv_file)
+        # Extract text from CV (PDF)
+        cv_text = extract_text_from_pdf(cv_file)
 
-    # Extract text from job description (Image or Text)
-    if job_desc_file and job_desc_file.content_type.startswith('image/'):
-        job_desc_text = extract_text_from_image(job_desc_file)  # Extract text from image
-    elif not job_desc_text and job_desc_file:
-        job_desc_text = extract_text_from_pdf(job_desc_file)  # Extract text if job description is also a PDF
-    elif not job_desc_text:
-        raise ValidationError("No job description provided")
+        # Extract text from job description (Image or Text)
+        if job_desc_file and job_desc_file.content_type.startswith('image/'):
+            job_desc_text = extract_text_from_image(job_desc_file)  # Extract text from image
+        elif not job_desc_text and job_desc_file:
+            job_desc_text = extract_text_from_pdf(job_desc_file)  # Extract text if job description is also a PDF
+        elif not job_desc_text:
+            return JsonResponse({'error': "No job description provided"}, status=400)
 
-    # Use OpenAI to compare the resume and job description
-    comparison_result = compare_cv_and_job_description(cv_text, job_desc_text)
+        # Use OpenAI to compare the resume and job description
+        comparison_result = compare_cv_and_job_description(cv_text, job_desc_text)
 
-    # Return the analysis in the response
-    return Response({
-        'comparison_result': comparison_result,
-        # 'text': job_desc_text
-    })
+        # Return the analysis in the response
+        return JsonResponse({
+            'comparison_result': comparison_result,
+        })
+    
+    return JsonResponse({'error': "Method not allowed"}, status=405)
 
 
 def extract_text_from_pdf(pdf_file):
