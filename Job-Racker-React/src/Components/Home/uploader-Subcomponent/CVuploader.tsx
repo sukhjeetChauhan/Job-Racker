@@ -48,7 +48,7 @@ function CVUploader({ CVfile, setCVFile }: CVUploaderProps) {
         {CVfile ? (
           <p>{CVfile.name}</p>
         ) : (
-          <p>Drag & drop a PDF document here, or click to select one</p>
+          <p>Drag & drop a PDF or Word document here, or click to select one</p>
         )}
       </div>
     </div>

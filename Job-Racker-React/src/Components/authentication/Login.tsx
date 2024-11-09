@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useContext, useState } from 'react'
 import { loginUser, registerUser } from '../../apis/authenticationApis' // Adjust this path if needed
 import { AxiosError } from 'axios'
+import { useNavigate } from 'react-router-dom'
+import { AuthContext } from './AuthContext'
 
 const LoginComponent = () => {
   const [username, setUsername] = useState('')
@@ -9,6 +11,9 @@ const LoginComponent = () => {
   const [lastName, setLastName] = useState('')
   const [isRegisterMode, setIsRegisterMode] = useState(false) // Toggle between login and register
   const [message, setMessage] = useState('')
+
+  const navigate = useNavigate()
+  const auth = useContext(AuthContext)
 
   const handleLogin = async () => {
     try {
@@ -46,6 +51,11 @@ const LoginComponent = () => {
     } else {
       handleLogin()
     }
+
+    setTimeout(() => {
+      auth?.setRefetch(!auth.refetch)
+    }, 2000)
+    navigate('/')
   }
 
   return (

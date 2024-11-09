@@ -1,5 +1,6 @@
 import { ChangeEvent, useEffect, useState } from 'react'
 import { getAllJobs, updateStatus } from '../apis/jobApis'
+import { useNavigate } from 'react-router-dom'
 
 export type Status = 'applied' | 'rejected' | 'interviewed' | 'offer'
 
@@ -9,6 +10,7 @@ type Jobs = {
   company_name: string
   status: Status
   date_applied: string
+  [key: string]: unknown
 }
 
 export default function JobsPage() {
@@ -16,6 +18,9 @@ export default function JobsPage() {
   const [filterOption, setFilterOption] = useState<string>('')
   const [filterInput, setFilterInput] = useState<string>('')
   const [refetch, setRefetch] = useState<boolean>(false)
+
+  const navigate = useNavigate()
+
   useEffect(() => {
     async function fetchData() {
       const allJobs = await getAllJobs()
@@ -63,15 +68,43 @@ export default function JobsPage() {
     }
   }
 
+  function handleFilterSearch() {
+    const filteredJobs = jobs?.filter((job) => {
+      const value = job[filterOption]
+
+      // Check if value is a string before calling .toLowerCase()
+      if (
+        typeof value === 'string' &&
+        typeof filterInput === 'string' &&
+        filterOption !== 'date_applied'
+      ) {
+        return value.toLowerCase() === filterInput.toLowerCase()
+      } else {
+        return convertDate(value as string) == filterInput
+      }
+    })
+    setJobs(filteredJobs)
+  }
+
   return (
     <div className="flex flex-col">
-      <div className="w-4/5 mx-auto">
-        <div className="ml-auto w-fit mt-16 flex gap-2">
+      <div className="w-4/5 flex justify-between mx-auto items-end">
+        <div>
+          <button
+            className="bg-blue-500 px-4 py-2 rounded text-white"
+            onClick={() => navigate('/')}
+          >
+            Go Back Home
+          </button>
+        </div>
+        <div className="w-fit mt-16 flex gap-2">
           <p className="text-lg">Filter By:</p>
           <select
             value={filterOption}
+            onChange={(e) => setFilterOption(e.target.value)}
             className="border-2 border-gray-400 rounded bg-gray-100 p-[3px]"
           >
+            <option value="">-----------------</option>
             <option value="job_title">Job Title</option>
             <option value="company_name">Company Name</option>
             <option value="date_applied">Date</option>
@@ -81,7 +114,10 @@ export default function JobsPage() {
             onChange={(e) => setFilterInput(e.target.value)}
             className="border-2 border-gray-400 rounded bg-gray-100 p-[3px]"
           />
-          <button className="bg-blue-500 px-4 rounded text-white">
+          <button
+            className="bg-blue-500 px-4 rounded text-white"
+            onClick={handleFilterSearch}
+          >
             Search
           </button>
         </div>

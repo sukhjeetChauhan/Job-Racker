@@ -94,7 +94,7 @@ def compare_ai(request):
 
         # Extract text from CV (PDF)
         cv_text = extract_text_from_pdf(cv_file)
-        print(cv_text)
+       
 
         # Extract text from job description (Image or Text)
         if job_desc_file and job_desc_file.content_type.startswith('image/'):

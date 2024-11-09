@@ -9,6 +9,9 @@ export interface AuthContextType {
   isLoggedIn: boolean
   user: string
   firstName: string
+  csrfToken: string
+  refetch: boolean
+  setRefetch: (value: boolean) => void
 }
 
 // Define props for the AuthProvider, including children
@@ -23,6 +26,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [user, setUser] = useState('')
   const [firstName, setFirstName] = useState('')
+  const [csrfToken, setCsrfToken] = useState('')
+  const [refetch, setRefetch] = useState(false)
 
   const checkSession = async () => {
     try {
@@ -41,12 +46,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }
 
+  const getCsrfToken = () => {
+    // Fetch CSRF token on component mount
+    axios
+      .get('http://localhost:8000/api/auth/csrf-token/')
+      .then((response) => {
+        setCsrfToken(response.data.csrfToken)
+      })
+      .catch((error) => {
+        console.error('Error fetching CSRF token:', error)
+      })
+  }
+
   useEffect(() => {
+    console.log('hello')
+
+    getCsrfToken()
     checkSession()
-  }, [isLoggedIn])
+    console.log(refetch)
+  }, [refetch])
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, user, firstName }}>
+    <AuthContext.Provider
+      value={{ isLoggedIn, user, firstName, csrfToken, refetch, setRefetch }}
+    >
       {children}
     </AuthContext.Provider>
   )

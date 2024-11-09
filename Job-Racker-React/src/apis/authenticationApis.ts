@@ -39,7 +39,7 @@ export const loginUser = async (username: string, password: string) => {
       username,
       password,
     })
-    console.log(response.data.message)
+    alert(response.data.message)
   } catch (error) {
     const err = error as AxiosError<ErrorResponse>
     if (err.response && err.response.data) {
@@ -51,10 +51,19 @@ export const loginUser = async (username: string, password: string) => {
 }
 
 // Logout User
-export const logoutUser = async () => {
+export const logoutUser = async (token: string) => {
   try {
-    const response = await axios.post('http://localhost:8000/api/auth/logout/')
-    console.log(response.data.message)
+    const response = await axios.post(
+      'http://localhost:8000/api/auth/logout/',
+      {}, // An empty body if no data is required
+      {
+        headers: {
+          'X-CSRFToken': token, // Attach CSRF token correctly
+        },
+        withCredentials: true, // Ensures cookies are sent with request
+      }
+    )
+    alert(response.data.message)
   } catch (error) {
     const err = error as AxiosError<ErrorResponse>
     if (err.response && err.response.data) {
