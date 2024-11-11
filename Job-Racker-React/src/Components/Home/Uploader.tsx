@@ -4,6 +4,7 @@ import JobDescUploader from './uploader-Subcomponent/JobDescUploader'
 import axios from 'axios'
 import ReactMarkdown from 'react-markdown'
 import { useNavigate } from 'react-router-dom'
+import SpinnerLoader from '../SpinnerLoader'
 
 // Define TypeScript types for the result state
 type SuccessResult = {
@@ -21,14 +22,15 @@ export default function Uploader() {
   const [jobDescFile, setJobDescFile] = useState<File | null>(null)
   const [pastedText, setPastedText] = useState<string>('')
   const [result, setResult] = useState<ResultState>(null)
-  const [loading, setLoading] = useState<boolean>(false) // Loading state for spinner
+  const [resultLoading, setResultLoading] = useState<boolean>(false) // Loading state for result spinner
+  const [jobPageloading, setJobPageLoading] = useState<boolean>(false) // Loading state for job Page spinner
   const [title, setTitle] = useState<string>('')
   const [companyName, setCompanyName] = useState<string>('')
 
   const navigate = useNavigate()
 
   async function analyzeByAi(): Promise<void> {
-    setLoading(true) // Start loading
+    setResultLoading(true) // Start loading
     // Create form data object to send to the backend
     const formData = new FormData()
     if (CVfile) {
@@ -62,7 +64,7 @@ export default function Uploader() {
       console.error('Error submitting data:', error)
       setResult({ error: 'Failed to process your request' })
     } finally {
-      setLoading(false) // Stop loading when done
+      setResultLoading(false) // Stop loading when done
     }
   }
 
@@ -76,7 +78,7 @@ export default function Uploader() {
   }
 
   async function createJob() {
-    setLoading(true)
+    setJobPageLoading(true)
     if (title !== '' && companyName !== '') {
       const response = await axios.post(
         'http://localhost:8000/api/apply/',
@@ -94,7 +96,6 @@ export default function Uploader() {
 
       if (response.status === 201) {
         console.log('Job application submitted:', response.data)
-        setLoading(false)
         navigate('/jobs')
       } else {
         console.error('Failed to submit job application:', response.status)
@@ -102,6 +103,7 @@ export default function Uploader() {
     } else {
       alert('Add Job title and Company Name')
     }
+    setJobPageLoading(false)
   }
 
   return (
@@ -133,15 +135,8 @@ export default function Uploader() {
           onChange={handleChange}
         />
       </div>
-      {loading ? (
-        <div className="flex justify-center items-center">
-          <div
-            className="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full"
-            role="status"
-          >
-            <span className="visually-hidden">--</span>
-          </div>
-        </div>
+      {resultLoading ? (
+        <SpinnerLoader />
       ) : (
         <button
           className="bg-gray-400 rounded text-white px-4 py-2 text-lg"
@@ -170,16 +165,7 @@ export default function Uploader() {
           Rack This Job
         </button>
       )}
-      {loading && result && (
-        <div className="flex justify-center items-center">
-          <div
-            className="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full"
-            role="status"
-          >
-            <span className="visually-hidden">--</span>
-          </div>
-        </div>
-      )}
+      {jobPageloading && result && <SpinnerLoader />}
     </div>
   )
 }

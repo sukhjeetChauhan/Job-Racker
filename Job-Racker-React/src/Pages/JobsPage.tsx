@@ -87,15 +87,16 @@ export default function JobsPage() {
   }
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col bg-gradient-to-br from-blue-100 to-red-100">
       <div className="w-4/5 flex justify-between mx-auto items-end">
-        <div>
+        <div className="flex items-center gap-8">
           <button
             className="bg-blue-500 px-4 py-2 rounded text-white"
             onClick={() => navigate('/')}
           >
             Go Back Home
           </button>
+          <p className="text-xl text-blue-500 font-semibold">{`Total Jobs: ${jobs?.length}`}</p>
         </div>
         <div className="w-fit mt-16 flex gap-2">
           <p className="text-lg">Filter By:</p>
@@ -122,7 +123,7 @@ export default function JobsPage() {
           </button>
         </div>
       </div>
-      <div className="w-4/5 mx-auto mb-32 mt-16 bg-gray-200 rounded min-h-[500px] p-8">
+      <div className="w-4/5 mx-auto mb-32 mt-16 bg-white rounded min-h-[500px] p-8 border-2 border-gray-300">
         <table className="min-w-full table-auto border-collapse border border-gray-500">
           <thead>
             <tr>
