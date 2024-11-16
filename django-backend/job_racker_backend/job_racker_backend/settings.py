@@ -54,6 +54,7 @@ INSTALLED_APPS = [
      'corsheaders',
     'rest_framework',
     'file_upload',  # Your app
+    'stripe_app',
 ]
 
 MIDDLEWARE = [

@@ -23,17 +23,35 @@ export default function Header() {
   }
 
   return (
-    <div className="w-full p-12 flex justify-between">
+    <div className="w-full p-12 flex justify-between items-center">
       <div>
-        <p className="text-blue-500 text-xl font-semibold">{`Welcome ${
+        <p className="text-blue-500 text-2xl font-semibold">{`Welcome ${
           auth?.user !== ''
             ? auth?.firstName !== ''
               ? auth?.firstName
               : auth?.user
             : ''
         }`}</p>
+        <div className="flex gap-2 items-center mt-2">
+          <p className="text-lg font-semibold">
+            Scans Available:{' '}
+            <span>{auth?.availableScans.total_scans_left}</span>
+          </p>
+        </div>
       </div>
-      <div className="flex gap-2">
+      <div className="flex gap-2 items-center">
+        <button
+          className="px-4 py-2 rounded bg-gray-400 text-white"
+          onClick={() => navigate('/checkout')}
+        >
+          Buy More Scans
+        </button>
+        <button
+          onClick={navigateToJobs}
+          className="px-4 py-2 rounded bg-blue-500 text-white"
+        >
+          My Jobs
+        </button>
         {auth?.isLoggedIn ? (
           <button
             className="px-4 py-2 rounded bg-red-400 text-white"
@@ -49,12 +67,6 @@ export default function Header() {
             Login/Register
           </button>
         )}
-        <button
-          onClick={navigateToJobs}
-          className="px-4 py-2 rounded bg-blue-500 text-white"
-        >
-          My Jobs
-        </button>
       </div>
     </div>
   )

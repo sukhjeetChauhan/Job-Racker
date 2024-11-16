@@ -15,6 +15,7 @@ from openai import OpenAI
 from pdf2image import convert_from_bytes
 from rest_framework import status
 from docx import Document
+from stripe_app.models import UserScans
 
 # Initialize OpenAI client
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
@@ -106,6 +107,18 @@ def compare_ai(request):
 
         # Use OpenAI to compare the resume and job description
         comparison_result = compare_cv_and_job_description(cv_text, job_desc_text)
+
+        if comparison_result:
+            try:
+                # Get the UserScans object for the logged-in user
+                user_scans = UserScans.objects.get(user=request.user)
+                
+                # Attempt to consume a scan
+                user_scans.consume_scan()                
+                print("Scan consumed successfully")
+                
+            except Exception as e:
+                print("error :", e)
 
         # Return the analysis in the response
         return JsonResponse({

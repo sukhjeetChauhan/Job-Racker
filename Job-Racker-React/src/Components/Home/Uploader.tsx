@@ -1,10 +1,11 @@
-import { ChangeEvent, useState } from 'react'
+import { ChangeEvent, useContext, useState } from 'react'
 import CVUploader from './uploader-Subcomponent/CVuploader'
 import JobDescUploader from './uploader-Subcomponent/JobDescUploader'
 import axios from 'axios'
 import ReactMarkdown from 'react-markdown'
 import { useNavigate } from 'react-router-dom'
 import SpinnerLoader from '../SpinnerLoader'
+import { AuthContext } from '../authentication/AuthContext'
 
 // Define TypeScript types for the result state
 type SuccessResult = {
@@ -25,46 +26,53 @@ export default function Uploader() {
   const [resultLoading, setResultLoading] = useState<boolean>(false) // Loading state for result spinner
   const [jobPageloading, setJobPageLoading] = useState<boolean>(false) // Loading state for job Page spinner
   const [title, setTitle] = useState<string>('')
+  const [noScans, setNoScans] = useState(false)
   const [companyName, setCompanyName] = useState<string>('')
+
+  const userData = useContext(AuthContext)
 
   const navigate = useNavigate()
 
   async function analyzeByAi(): Promise<void> {
-    setResultLoading(true) // Start loading
-    // Create form data object to send to the backend
-    const formData = new FormData()
-    if (CVfile) {
-      formData.append('cv', CVfile) // Append CV file
-    }
-    if (jobDescFile) {
-      formData.append('job_desc', jobDescFile) // Append Job Description image file
-    }
-    if (pastedText) {
-      formData.append('job_desc_text', pastedText) // Append Job Description text
-    }
+    if ((userData?.availableScans.total_scans_left as number) > 0) {
+      setResultLoading(true) // Start loading
+      // Create form data object to send to the backend
+      const formData = new FormData()
+      if (CVfile) {
+        formData.append('cv', CVfile) // Append CV file
+      }
+      if (jobDescFile) {
+        formData.append('job_desc', jobDescFile) // Append Job Description image file
+      }
+      if (pastedText) {
+        formData.append('job_desc_text', pastedText) // Append Job Description text
+      }
 
-    try {
-      // Post the data using axios
-      const response = await axios.post(
-        'http://localhost:8000/api/compare-ai/',
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            // 'X-CSRFToken': csrfToken, // Include CSRF token here
-          },
-          // withCredentials: true,
-        }
-      )
+      try {
+        // Post the data using axios
+        const response = await axios.post(
+          'http://localhost:8000/api/compare-ai/',
+          formData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+              // 'X-CSRFToken': csrfToken, // Include CSRF token here
+            },
+            // withCredentials: true,
+          }
+        )
 
-      // Handle successful response
-      setResult(response.data)
-      // console.log(response.data)
-    } catch (error) {
-      console.error('Error submitting data:', error)
-      setResult({ error: 'Failed to process your request' })
-    } finally {
-      setResultLoading(false) // Stop loading when done
+        // Handle successful response
+        setResult(response.data)
+        // console.log(response.data)
+      } catch (error) {
+        console.error('Error submitting data:', error)
+        setResult({ error: 'Failed to process your request' })
+      } finally {
+        setResultLoading(false) // Stop loading when done
+      }
+    } else {
+      setNoScans(true)
     }
   }
 
@@ -144,6 +152,20 @@ export default function Uploader() {
         >
           Compare and Analyze
         </button>
+      )}
+      {noScans && (
+        <p className="text-xl text-blue-500">
+          You have run out of all your scans. Click
+          <button
+            onClick={() => {
+              navigate('/checkout')
+            }}
+            className="px-4 py-[2px] bg-white text-red-400 border-2 border-gray-400 rounded mx-2"
+          >
+            Here
+          </button>
+          to buy more
+        </p>
       )}
       {result && (
         <div className="w-4/5 p-12 bg-blue-100 rounded shadow-lg">

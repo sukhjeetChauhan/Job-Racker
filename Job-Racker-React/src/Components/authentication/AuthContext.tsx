@@ -4,6 +4,19 @@ import axios from 'axios'
 
 axios.defaults.withCredentials = true
 
+// Define shape of available scans object
+interface Availablescans {
+  daily_scans_left: number
+  bought_scans_left: number
+  total_scans_left: number
+}
+
+const initialScans = {
+  daily_scans_left: 0,
+  bought_scans_left: 0,
+  total_scans_left: 0,
+}
+
 // Define the shape of the context value
 export interface AuthContextType {
   isLoggedIn: boolean
@@ -12,6 +25,7 @@ export interface AuthContextType {
   csrfToken: string
   refetch: boolean
   setRefetch: (value: boolean) => void
+  availableScans: Availablescans
 }
 
 // Define props for the AuthProvider, including children
@@ -28,6 +42,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [firstName, setFirstName] = useState('')
   const [csrfToken, setCsrfToken] = useState('')
   const [refetch, setRefetch] = useState(false)
+  const [availableScans, setAvailableScans] =
+    useState<Availablescans>(initialScans)
 
   const checkSession = async () => {
     try {
@@ -58,17 +74,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       })
   }
 
-  useEffect(() => {
-    console.log('hello')
+  const getAvailableScans = () => {
+    // Fetch number of scans available
+    axios
+      .get('http://localhost:8000/api/stripe/available-scans/')
+      .then((response) => {
+        setAvailableScans(response.data.scans)
+      })
+      .catch((error) => {
+        console.error('Error fetching available scans:', error)
+      })
+  }
 
+  useEffect(() => {
     getCsrfToken()
     checkSession()
-    console.log(refetch)
+    getAvailableScans()
   }, [refetch])
 
   return (
     <AuthContext.Provider
-      value={{ isLoggedIn, user, firstName, csrfToken, refetch, setRefetch }}
+      value={{
+        isLoggedIn,
+        user,
+        firstName,
+        csrfToken,
+        refetch,
+        setRefetch,
+        availableScans,
+      }}
     >
       {children}
     </AuthContext.Provider>
