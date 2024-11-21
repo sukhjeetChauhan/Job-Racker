@@ -1,5 +1,7 @@
 import axios, { AxiosError } from 'axios'
 
+export const baseApiUrl = import.meta.env.VITE_API_BASE_URL
+
 interface ErrorResponse {
   error: string
 }
@@ -12,15 +14,12 @@ export const registerUser = async (
   last_name: string
 ) => {
   try {
-    const response = await axios.post(
-      'http://localhost:8000/api/auth/register/',
-      {
-        username,
-        password,
-        first_name,
-        last_name,
-      }
-    )
+    const response = await axios.post(`${baseApiUrl}/api/auth/register/`, {
+      username,
+      password,
+      first_name,
+      last_name,
+    })
     console.log(response.data.message)
   } catch (error) {
     const err = error as AxiosError<ErrorResponse> // Define the error response type
@@ -35,7 +34,7 @@ export const registerUser = async (
 // Login User
 export const loginUser = async (username: string, password: string) => {
   try {
-    const response = await axios.post('http://localhost:8000/api/auth/login/', {
+    const response = await axios.post(`${baseApiUrl}/api/auth/login/`, {
       username,
       password,
     })
@@ -54,7 +53,7 @@ export const loginUser = async (username: string, password: string) => {
 export const logoutUser = async (token: string) => {
   try {
     const response = await axios.post(
-      'http://localhost:8000/api/auth/logout/',
+      `${baseApiUrl}/api/auth/logout/`,
       {}, // An empty body if no data is required
       {
         headers: {
@@ -77,12 +76,9 @@ export const logoutUser = async (token: string) => {
 // Function to check session status
 export const checkSession = async () => {
   try {
-    const response = await axios.get(
-      'http://localhost:8000/api/auth/session-status/',
-      {
-        withCredentials: true,
-      }
-    )
+    const response = await axios.get(`${baseApiUrl}/api/auth/session-status/`, {
+      withCredentials: true,
+    })
     return response
   } catch (error) {
     return error

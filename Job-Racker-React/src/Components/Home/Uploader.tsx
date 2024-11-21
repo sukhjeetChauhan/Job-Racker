@@ -72,6 +72,7 @@ export default function Uploader() {
         console.error('Error submitting data:', error)
         setResult({ error: 'Failed to process your request' })
       } finally {
+        userData.setRefetch(!userData.refetch)
         setResultLoading(false) // Stop loading when done
       }
     }

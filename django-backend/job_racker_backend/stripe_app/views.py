@@ -14,8 +14,11 @@ load_dotenv()
 # Access the Stripe secret key
 STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
 
+# Access the stripe webhook key
+STRIPE_WEBHOOK_KEY = os.getenv('STRIPE_WEBHOOK_KEY')
 # Set it for Stripe API usage
 stripe.api_key = STRIPE_SECRET_KEY
+
 
 
 YOUR_DOMAIN = 'http://localhost:5173'
@@ -91,7 +94,7 @@ def get_available_scans(request):
 def stripe_webhook(request):
     payload = request.body
     sig_header = request.META['HTTP_STRIPE_SIGNATURE']
-    endpoint_secret = "whsec_c120d6342311439a5999423e55b011ea98f0d8e51582ed374a1659a0a96b44c2"
+    endpoint_secret = STRIPE_WEBHOOK_KEY
 
     try:
         event = stripe.Webhook.construct_event(

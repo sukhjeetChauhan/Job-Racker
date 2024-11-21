@@ -1,4 +1,5 @@
 import { loadStripe } from '@stripe/stripe-js'
+import { baseApiUrl } from '../../apis/authenticationApis'
 import {
   EmbeddedCheckoutProvider,
   EmbeddedCheckout,
@@ -8,14 +9,14 @@ import { useCallback } from 'react'
 // Make sure to call `loadStripe` outside of a component’s render to avoid
 // recreating the `Stripe` object on every render.
 // This is your test secret API key.
-const stripePromise = loadStripe(
-  'pk_test_51PLgjzK3nDwi1iFQFXCVEUyURYb88KGNqu0T1CF1ndZPHXuzFQoDlz845Kw7Ui5YUyMHItCWGBlmNEoCjs8r7kY200XEcGW366'
-)
+const stripeKey = import.meta.env.VITE_STRIPE_KEY
+
+const stripePromise = loadStripe(stripeKey)
 
 const CheckoutForm = () => {
   const fetchClientSecret = useCallback(() => {
     // Create a Checkout Session
-    return fetch('http://localhost:8000/api/stripe/create-checkout-session/', {
+    return fetch(`${baseApiUrl}/api/stripe/create-checkout-session/`, {
       method: 'POST',
       credentials: 'include',
     })

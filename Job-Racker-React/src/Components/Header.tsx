@@ -6,7 +6,7 @@ import { logoutUser } from '../apis/authenticationApis'
 export default function Header() {
   const navigate = useNavigate()
   const auth = useContext(AuthContext)
-  console.log(auth?.availableScans.total_scans_left)
+  
 
   function navigateToJobs() {
     navigate('/jobs')
@@ -40,6 +40,13 @@ export default function Header() {
           </p>
         </div>
       </div>
+      {auth?.isLoggedIn || (
+        <div>
+          <p className="text-lg text-red-400 font-semibold">
+            Please Sign In to use the Scan services and get 2 free scans daily
+          </p>
+        </div>
+      )}
       <div className="flex gap-2 items-center">
         {auth?.isLoggedIn && (
           <button

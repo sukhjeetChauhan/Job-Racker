@@ -1,6 +1,7 @@
 // AuthContext.tsx
 import React, { createContext, useState, useEffect } from 'react'
 import axios from 'axios'
+import { baseApiUrl } from '../../apis/authenticationApis'
 
 axios.defaults.withCredentials = true
 
@@ -48,7 +49,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const checkSession = async () => {
     try {
       const response = await axios.get(
-        'http://localhost:8000/api/auth/session-status/',
+        `${baseApiUrl}/api/auth/session-status/`,
         {
           withCredentials: true,
         }
@@ -65,7 +66,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const getCsrfToken = () => {
     // Fetch CSRF token on component mount
     axios
-      .get('http://localhost:8000/api/auth/csrf-token/')
+      .get(`${baseApiUrl}/api/auth/csrf-token/`)
       .then((response) => {
         setCsrfToken(response.data.csrfToken)
       })
@@ -77,7 +78,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const getAvailableScans = () => {
     // Fetch number of scans available
     axios
-      .get('http://localhost:8000/api/stripe/available-scans/')
+      .get(`${baseApiUrl}/api/stripe/available-scans/`)
       .then((response) => {
         setAvailableScans(response.data.scans)
       })

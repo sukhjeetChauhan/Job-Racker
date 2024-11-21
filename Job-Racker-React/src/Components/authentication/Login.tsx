@@ -54,8 +54,8 @@ const LoginComponent = () => {
 
     setTimeout(() => {
       auth?.setRefetch(!auth.refetch)
+      navigate('/')
     }, 2000)
-    navigate('/')
   }
 
   return (
