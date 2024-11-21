@@ -17,6 +17,7 @@ const CheckoutForm = () => {
     // Create a Checkout Session
     return fetch('http://localhost:8000/api/stripe/create-checkout-session/', {
       method: 'POST',
+      credentials: 'include',
     })
       .then((res) => res.json())
       .then((data) => data.clientSecret)

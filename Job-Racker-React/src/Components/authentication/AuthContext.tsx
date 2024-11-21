@@ -83,6 +83,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       })
       .catch((error) => {
         console.error('Error fetching available scans:', error)
+        setAvailableScans(initialScans)
       })
   }
 

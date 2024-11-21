@@ -6,6 +6,7 @@ import { logoutUser } from '../apis/authenticationApis'
 export default function Header() {
   const navigate = useNavigate()
   const auth = useContext(AuthContext)
+  console.log(auth?.availableScans.total_scans_left)
 
   function navigateToJobs() {
     navigate('/jobs')
@@ -40,18 +41,22 @@ export default function Header() {
         </div>
       </div>
       <div className="flex gap-2 items-center">
-        <button
-          className="px-4 py-2 rounded bg-gray-400 text-white"
-          onClick={() => navigate('/checkout')}
-        >
-          Buy More Scans
-        </button>
-        <button
-          onClick={navigateToJobs}
-          className="px-4 py-2 rounded bg-blue-500 text-white"
-        >
-          My Jobs
-        </button>
+        {auth?.isLoggedIn && (
+          <button
+            className="px-4 py-2 rounded bg-gray-400 text-white"
+            onClick={() => navigate('/checkout')}
+          >
+            Buy More Scans
+          </button>
+        )}
+        {auth?.isLoggedIn && (
+          <button
+            onClick={navigateToJobs}
+            className="px-4 py-2 rounded bg-blue-500 text-white"
+          >
+            My Jobs
+          </button>
+        )}
         {auth?.isLoggedIn ? (
           <button
             className="px-4 py-2 rounded bg-red-400 text-white"

@@ -21,17 +21,21 @@ stripe.api_key = STRIPE_SECRET_KEY
 YOUR_DOMAIN = 'http://localhost:5173'
 
 @csrf_exempt
-def create_checkout_session(request):
-    
+def create_checkout_session(request):    
+
     try:
+        user = request.user
+        if not user.is_authenticated:
+            return JsonResponse({'error': 'User not authenticated'}, status=401)
+        
         session = stripe.checkout.Session.create(
             ui_mode='embedded',
             line_items=[
-                    {
+                {
                     'price_data': {
                         'currency': 'nzd',
                         'product_data': {
-                            'name': 'Get 30 Scans',
+                            'name': 'Get 25 Scans',
                         },
                         'unit_amount': 500,  # 5 NZD in cents
                     },
@@ -40,9 +44,11 @@ def create_checkout_session(request):
             ],
             mode='payment',
             return_url=f"{YOUR_DOMAIN}/return?session_id={{CHECKOUT_SESSION_ID}}",
-            # automatic_tax={'enabled': True},
+            metadata={
+                'user_id': str(user.id),  # Pass the user ID to associate the session
+            },
         )
-        return JsonResponse({'clientSecret': session.client_secret})
+        return JsonResponse({'clientSecret': session.client_secret})  
     except Exception as e:
         print(str(e))
         return JsonResponse({'error': str(e)}, status=400)
@@ -79,6 +85,43 @@ def get_available_scans(request):
         return JsonResponse({"error": "User scans record not found"}, status=404)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
+
+@csrf_exempt
+def stripe_webhook(request):
+    payload = request.body
+    sig_header = request.META['HTTP_STRIPE_SIGNATURE']
+    endpoint_secret = "whsec_c120d6342311439a5999423e55b011ea98f0d8e51582ed374a1659a0a96b44c2"
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, endpoint_secret
+        )
+    except ValueError as e:
+        return JsonResponse({'error': 'Invalid payload'}, status=400)
+    except stripe.error.SignatureVerificationError as e:
+        return JsonResponse({'error': 'Invalid signature'}, status=400)
+
+    # Handle the event
+    if event['type'] == 'checkout.session.completed':
+        
+        session = event['data']['object']
+        user_id = session['metadata'].get('user_id')
+        
+        if user_id:
+            try:
+                
+                user_scans = UserScans.objects.get(user_id=user_id)
+                # Logic to add scans (since the purchase was for new scans)
+                user_scans.add_bought_scans(25)  # Example: Add 30 scans
+            except UserScans.DoesNotExist:
+                print(f"User scans record not found for user ID {user_id}")
+   
+        
+    else:
+        print(f"Unhandled event type {event['type']}")
+
+    return JsonResponse({'status': 'success'})
 
 
 

@@ -34,7 +34,10 @@ export default function Uploader() {
   const navigate = useNavigate()
 
   async function analyzeByAi(): Promise<void> {
-    if ((userData?.availableScans.total_scans_left as number) > 0) {
+    if (
+      (userData?.availableScans.total_scans_left as number) > 0 &&
+      userData?.isLoggedIn
+    ) {
       setResultLoading(true) // Start loading
       // Create form data object to send to the backend
       const formData = new FormData()
@@ -71,8 +74,19 @@ export default function Uploader() {
       } finally {
         setResultLoading(false) // Stop loading when done
       }
-    } else {
+    }
+
+    if (
+      userData?.availableScans.total_scans_left === 0 &&
+      userData.isLoggedIn
+    ) {
       setNoScans(true)
+    }
+
+    if (!userData?.isLoggedIn) {
+      alert(
+        'Please Sign In to use this feature and get your 2 free daily scans.'
+      )
     }
   }
 
