@@ -102,6 +102,9 @@ DATABASES = {
         'PASSWORD': config('PGPASSWORD'),  # Use the appropriate variable
         'HOST': config('PGHOST'),      # Use the appropriate variable
         'PORT': config('PGPORT', default='5432'),  # Default port for PostgreSQL
+        'OPTIONS': {
+            'sslmode': 'require',  # Ensure SSL is enabled for Railway
+        },
     }
 }
 
