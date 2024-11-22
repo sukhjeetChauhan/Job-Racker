@@ -23,10 +23,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-o4e2$igzqzqzdg3fx=$v1)631!hc2-j)y6i2%q4uw8dfqzb#*c"
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = []
 
@@ -97,11 +97,11 @@ WSGI_APPLICATION = "job_racker_backend.wsgi.application"
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME'),
-        'USER': config('DB_USER'),
-        'PASSWORD': config('DB_PASS'),
-        'HOST': config('DB_HOST', default='localhost'),
-        'PORT': config('DB_PORT', default='5432'),
+        'NAME': config('PGDATABASE'),  # Use the appropriate variable
+        'USER': config('PGUSER'),      # Use the appropriate variable
+        'PASSWORD': config('PGPASSWORD'),  # Use the appropriate variable
+        'HOST': config('PGHOST'),      # Use the appropriate variable
+        'PORT': config('PGPORT', default='5432'),  # Default port for PostgreSQL
     }
 }
 
