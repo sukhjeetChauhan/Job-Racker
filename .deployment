@@ -1,2 +1,2 @@
 [config]
-project = django-backend
+project = ./django-backend
