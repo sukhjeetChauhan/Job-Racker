@@ -36,11 +36,12 @@ CORS_ALLOW_CREDENTIALS = True
 
 # Allow requests from your frontend's URL
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:5173',  # Your React app's origin
+    'http://localhost:5173',
+    "https://job-racker.vercel.app/"  # Your React app's origin
 ]
 
 # Enable CSRF for session-based authentication
-CSRF_TRUSTED_ORIGINS = ["http://localhost:5173"]
+CSRF_TRUSTED_ORIGINS = ["http://localhost:5173","https://job-racker.vercel.app/"]
 
 # Application definition
 
