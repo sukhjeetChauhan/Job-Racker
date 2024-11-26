@@ -6,6 +6,7 @@ import ReactMarkdown from 'react-markdown'
 import { useNavigate } from 'react-router-dom'
 import SpinnerLoader from '../SpinnerLoader'
 import { AuthContext } from '../authentication/AuthContext'
+import { baseApiUrl } from '../../apis/authenticationApis'
 
 // Define TypeScript types for the result state
 type SuccessResult = {
@@ -54,7 +55,7 @@ export default function Uploader() {
       try {
         // Post the data using axios
         const response = await axios.post(
-          'http://localhost:8000/api/compare-ai/',
+          `${baseApiUrl}/api/compare-ai/`,
           formData,
           {
             headers: {
@@ -104,7 +105,7 @@ export default function Uploader() {
     setJobPageLoading(true)
     if (title !== '' && companyName !== '') {
       const response = await axios.post(
-        'http://localhost:8000/api/apply/',
+        `${baseApiUrl}/api/apply/`,
         {
           job_title: title,
           company_name: companyName,
