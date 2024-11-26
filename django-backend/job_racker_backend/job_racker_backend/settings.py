@@ -28,18 +28,20 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [config('APP_HOST', default='localhost')]
+
 
 # CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
 # Allow requests from your frontend's URL
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:5173',  # Your React app's origin
+    'http://localhost:5173',
+    "https://job-racker.vercel.app/"  # Your React app's origin
 ]
 
 # Enable CSRF for session-based authentication
-CSRF_TRUSTED_ORIGINS = ["http://localhost:5173"]
+CSRF_TRUSTED_ORIGINS = ["http://localhost:5173","https://job-racker.vercel.app/"]
 
 # Application definition
 
@@ -103,7 +105,7 @@ DATABASES = {
         'HOST': config('PGHOST'),      # Use the appropriate variable
         'PORT': config('PGPORT', default='5432'),  # Default port for PostgreSQL
         'OPTIONS': {
-            'sslmode': 'require',  # Ensure SSL is enabled for Railway
+            'sslmode': 'require',  # Ensure SSL is enabled 
         },
     }
 }
