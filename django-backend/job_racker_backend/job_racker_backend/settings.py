@@ -28,7 +28,7 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = [config('APP_HOST', default='localhost')]
+ALLOWED_HOSTS = [config('APP_HOST', default='localhost'), 'localhost']
 
 
 # CORS_ALLOW_ALL_ORIGINS = True
@@ -37,11 +37,13 @@ CORS_ALLOW_CREDENTIALS = True
 # Allow requests from your frontend's URL
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
-    "https://job-racker.vercel.app/"  # Your React app's origin
+    # "https://job-racker.vercel.app/"  # Your React app's origin
 ]
 
 # Enable CSRF for session-based authentication
-CSRF_TRUSTED_ORIGINS = ["http://localhost:5173","https://job-racker.vercel.app/"]
+CSRF_TRUSTED_ORIGINS = ["http://localhost:5173",
+                        # "https://job-racker.vercel.app/"
+                        ]
 
 # Application definition
 
