@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import SpinnerLoader from '../SpinnerLoader'
+import { baseApiUrl } from '../../apis/authenticationApis'
 
 const Return = () => {
   const [status, setStatus] = useState<string | null>(null)
@@ -11,9 +12,7 @@ const Return = () => {
     const urlParams = new URLSearchParams(queryString)
     const sessionId = urlParams.get('session_id')
 
-    fetch(
-      `http://localhost:8000/api/stripe/session-status?session_id=${sessionId}`
-    )
+    fetch(`${baseApiUrl}/api/stripe/session-status?session_id=${sessionId}`)
       .then((res) => {
         if (!res.ok) {
           throw new Error('Failed to fetch session status')
