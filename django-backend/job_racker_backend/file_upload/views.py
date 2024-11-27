@@ -7,7 +7,8 @@ from django.http import JsonResponse
 from .serializers import JobApplicationSerializer
 from .models import JobApplication
 import json
-import pdfplumber
+# import pdfplumber
+import fitz
 from PIL import Image
 import pytesseract  # For OCR
 from django.conf import settings
@@ -132,38 +133,37 @@ def extract_text_from_pdf(file):
     """Extract text from PDF or Word (.docx) file."""
     text = ''
     file_name = file.name.lower()
-    
-    # Check the file extension to determine processing type
+
     if file_name.endswith('.pdf'):
-        file.seek(0)  # Reset file pointer in case it was previously read
-        # First attempt: Extract text using pdfplumber (text-based PDF)
-        with pdfplumber.open(file) as pdf:
-            for page in pdf.pages:
-                page_text = page.extract_text()
-                if page_text:
-                    text += page_text + ' '
+        file.seek(0)  # Reset file pointer
+        pdf_bytes = file.read()
+
+        try:
+            # Extract text using PyMuPDF
+            pdf_document = fitz.open(stream=pdf_bytes, filetype="pdf")
+            for page_num in range(len(pdf_document)):
+                page = pdf_document[page_num]
+                text += page.get_text() + ' '  # Extract text from each page
+            pdf_document.close()
+        except Exception as e:
+            print(f"Error using PyMuPDF: {e}")
+            text = ''  # Reset text if PyMuPDF fails
         
-        if text.strip():  # If text was successfully extracted using pdfplumber
-            return text.strip()
-        
-        # Second attempt: Use OCR if no text was extracted (likely image-based PDF)
-        file.seek(0)  # Reset file pointer again for OCR
-        pdf_bytes = file.read()  # Read the entire PDF as bytes
-        pages = convert_from_bytes(pdf_bytes)  # Convert PDF pages to images
-        
-        for page_image in pages:
-            page_text = pytesseract.image_to_string(page_image)
-            text += page_text + ' '
-        
+        if not text.strip():  # If no text was extracted, fallback to OCR
+            pages = convert_from_bytes(pdf_bytes)  # Convert PDF pages to images
+            for page_image in pages:
+                page_text = pytesseract.image_to_string(page_image)
+                text += page_text + ' '
+
     elif file_name.endswith('.docx'):
-        # Process Word file
+        # Extract text from Word files
         doc = Document(file)
         for paragraph in doc.paragraphs:
             text += paragraph.text + ' '
 
     else:
         raise ValueError("Unsupported file type. Only .pdf and .docx files are supported.")
-    
+
     return text.strip()
 
 

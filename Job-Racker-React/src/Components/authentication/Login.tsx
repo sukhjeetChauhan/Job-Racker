@@ -50,12 +50,12 @@ const LoginComponent = () => {
       handleRegister()
     } else {
       handleLogin()
-    }
 
-    setTimeout(() => {
-      auth?.setRefetch(!auth.refetch)
-      navigate('/')
-    }, 2000)
+      setTimeout(() => {
+        auth?.setRefetch(!auth.refetch)
+        navigate('/')
+      }, 2000)
+    }
   }
 
   return (
