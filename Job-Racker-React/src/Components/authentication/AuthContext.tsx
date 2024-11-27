@@ -66,7 +66,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const getCsrfToken = () => {
     // Fetch CSRF token on component mount
     axios
-      .get(`${baseApiUrl}/api/auth/csrf-token/`)
+      .get(`${baseApiUrl}/api/auth/csrf-token/`, { withCredentials: true })
       .then((response) => {
         setCsrfToken(response.data.csrfToken)
       })
