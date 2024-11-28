@@ -17,16 +17,32 @@ const LoginComponent = () => {
 
   const handleLogin = async () => {
     try {
-      await loginUser(username, password)
+      const response = await loginUser(username, password)
+
+      if (response?.data.message === 'Logged in successfully') {
+        // Assume the API returns a response with a `message` field
+        setMessage(response?.data.message || 'Logged in successfully')
+
+        // Redirect or perform actions after login
+        setTimeout(() => {
+          auth?.setRefetch(!auth.refetch)
+          navigate('/')
+        }, 2000)
+      } else {
+        setMessage('Invalid credentials')
+      }
     } catch (error) {
-      const err = error as AxiosError<{ error: string }>
+      const err = error as AxiosError<{ error: string; message?: string }>
+
       if (err.response && err.response.data) {
-        setMessage(err.response.data.error || 'Login failed')
+        // Prefer a `message` field if it exists; fallback to `error`
+        setMessage(
+          err.response.data.message || err.response.data.error || 'Login failed'
+        )
       } else {
         setMessage('An unexpected error occurred')
       }
     }
-    setMessage('Logged in successfully')
   }
 
   const handleRegister = async () => {
@@ -50,11 +66,6 @@ const LoginComponent = () => {
       handleRegister()
     } else {
       handleLogin()
-
-      setTimeout(() => {
-        auth?.setRefetch(!auth.refetch)
-        navigate('/')
-      }, 2000)
     }
   }
 
