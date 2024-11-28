@@ -18,7 +18,6 @@ const LoginComponent = () => {
   const handleLogin = async () => {
     try {
       await loginUser(username, password)
-      setMessage('Logged in successfully')
     } catch (error) {
       const err = error as AxiosError<{ error: string }>
       if (err.response && err.response.data) {
@@ -27,6 +26,7 @@ const LoginComponent = () => {
         setMessage('An unexpected error occurred')
       }
     }
+    setMessage('Logged in successfully')
   }
 
   const handleRegister = async () => {
