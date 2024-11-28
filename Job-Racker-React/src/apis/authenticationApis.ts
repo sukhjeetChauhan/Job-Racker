@@ -39,6 +39,7 @@ export const loginUser = async (username: string, password: string) => {
       password,
     })
     alert(response.data.message)
+    return response
   } catch (error) {
     const err = error as AxiosError<ErrorResponse>
     if (err.response && err.response.data) {
