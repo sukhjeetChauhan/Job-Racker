@@ -13,7 +13,8 @@ from PIL import Image
 import pytesseract  # For OCR
 from django.conf import settings
 from openai import OpenAI
-from pdf2image import convert_from_bytes
+# from pdf2image import convert_from_bytes
+import io
 from rest_framework import status
 from docx import Document
 from stripe_app.models import UserScans
@@ -81,52 +82,66 @@ def update_job_application_status(request, pk):
 
 @csrf_exempt
 def compare_ai(request):
-    if request.method == "POST":
-        """
-        Compare CV and job description (image or text) and return a similarity analysis using OpenAI.
-        """
-        # Extract CV file from the request
-        cv_file = request.FILES.get('cv')
-        job_desc_file = request.FILES.get('job_desc')
-        job_desc_text = request.POST.get('job_desc_text')  # In case job description is provided as text
+    try:
+        if request.method == "POST":
+            """
+            Compare CV and job description (image or text) and return a similarity analysis using OpenAI.
+            """
+            # Extract CV file from the request
+            cv_file = request.FILES.get('cv')
+            job_desc_file = request.FILES.get('job_desc')
+            job_desc_text = request.POST.get('job_desc_text')  # In case job description is provided as text
 
-        # Validate the presence of the CV file
-        if not cv_file:
-            return JsonResponse({'error': "No CV file uploaded"}, status=400)
+            # Validate the presence of the CV file
+            if not cv_file:
+                return JsonResponse({'error': "No CV file uploaded"}, status=400)
 
-        # Extract text from CV (PDF)
-        cv_text = extract_text_from_pdf(cv_file)
-       
-
-        # Extract text from job description (Image or Text)
-        if job_desc_file and job_desc_file.content_type.startswith('image/'):
-            job_desc_text = extract_text_from_image(job_desc_file)  # Extract text from image
-        elif not job_desc_text and job_desc_file:
-            job_desc_text = extract_text_from_pdf(job_desc_file)  # Extract text if job description is also a PDF
-        elif not job_desc_text:
-            return JsonResponse({'error': "No job description provided"}, status=400)
-
-        # Use OpenAI to compare the resume and job description
-        comparison_result = compare_cv_and_job_description(cv_text, job_desc_text)
-
-        if comparison_result:
+            # Extract text from CV (PDF)
             try:
-                # Get the UserScans object for the logged-in user
-                user_scans = UserScans.objects.get(user=request.user)
-                
-                # Attempt to consume a scan
-                user_scans.consume_scan()                
-                print("Scan consumed successfully")
-                
+                cv_text = extract_text_from_pdf(cv_file)
             except Exception as e:
-                print("error :", e)
+                return JsonResponse({'error': f"Failed to extract text from CV: {str(e)}"}, status=500)
 
-        # Return the analysis in the response
-        return JsonResponse({
-            'comparison_result': comparison_result,
-        })
-    
-    return JsonResponse({'error': "Method not allowed"}, status=405)
+            # Extract text from job description (Image or Text)
+            try:
+                if job_desc_file and job_desc_file.content_type.startswith('image/'):
+                    job_desc_text = extract_text_from_image(job_desc_file)  # Extract text from image
+                elif not job_desc_text and job_desc_file:
+                    job_desc_text = extract_text_from_pdf(job_desc_file)  # Extract text if job description is also a PDF
+                elif not job_desc_text:
+                    return JsonResponse({'error': "No job description provided"}, status=400)
+            except Exception as e:
+                return JsonResponse({'error': f"Failed to extract text from job description: {str(e)}"}, status=500)
+
+            # Use OpenAI to compare the resume and job description
+            try:
+                comparison_result = compare_cv_and_job_description(cv_text, job_desc_text)
+            except Exception as e:
+                return JsonResponse({'error': f"Failed to compare CV and job description: {str(e)}"}, status=500)
+
+            # Update the scan count
+            if comparison_result:
+                try:
+                    # Get the UserScans object for the logged-in user
+                    user_scans = UserScans.objects.get(user=request.user)
+                    
+                    # Attempt to consume a scan
+                    user_scans.consume_scan()
+                    print("Scan consumed successfully")
+                except Exception as e:
+                    print(f"Error updating scan count: {str(e)}")
+
+            # Return the analysis in the response
+            return JsonResponse({
+                'comparison_result': comparison_result,
+            })
+
+        return JsonResponse({'error': "Method not allowed"}, status=405)
+
+    except Exception as e:
+        # Catch unexpected errors and log them
+        print(f"Unexpected error in compare_ai: {str(e)}")
+        return JsonResponse({'error': "An unexpected error occurred"}, status=500)
 
 
 def extract_text_from_pdf(file):
@@ -144,16 +159,25 @@ def extract_text_from_pdf(file):
             for page_num in range(len(pdf_document)):
                 page = pdf_document[page_num]
                 text += page.get_text() + ' '  # Extract text from each page
-            pdf_document.close()
+            
+            # If no text was extracted, fallback to OCR
+            if not text.strip():
+                for page_num in range(len(pdf_document)):
+                    page = pdf_document[page_num]
+
+                    # Render page as an image
+                    pix = page.get_pixmap()
+
+                    # Convert PyMuPDF Pixmap to a PIL image
+                    image = Image.open(io.BytesIO(pix.tobytes("png")))
+
+                    # Perform OCR on the image
+                    page_text = pytesseract.image_to_string(image)
+                    text += page_text + " "
         except Exception as e:
-            print(f"Error using PyMuPDF: {e}")
-            text = ''  # Reset text if PyMuPDF fails
-        
-        if not text.strip():  # If no text was extracted, fallback to OCR
-            pages = convert_from_bytes(pdf_bytes)  # Convert PDF pages to images
-            for page_image in pages:
-                page_text = pytesseract.image_to_string(page_image)
-                text += page_text + ' '
+            print(f"Error processing PDF: {e}")
+        finally:
+            pdf_document.close()  # Ensure the document is closed properly
 
     elif file_name.endswith('.docx'):
         # Extract text from Word files
@@ -165,7 +189,6 @@ def extract_text_from_pdf(file):
         raise ValueError("Unsupported file type. Only .pdf and .docx files are supported.")
 
     return text.strip()
-
 
 def extract_text_from_image(image_file):
     """Extract text from an image file using Tesseract OCR."""

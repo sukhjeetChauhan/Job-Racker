@@ -17,7 +17,11 @@ const LoginComponent = () => {
 
   const handleLogin = async () => {
     try {
-      const response = await loginUser(username, password)
+      const response = await loginUser(
+        username,
+        password,
+        auth?.csrfToken as string
+      )
 
       if (response?.data.message === 'Logged in successfully') {
         // Assume the API returns a response with a `message` field
@@ -47,7 +51,13 @@ const LoginComponent = () => {
 
   const handleRegister = async () => {
     try {
-      await registerUser(username, password, firstName, lastName)
+      await registerUser(
+        username,
+        password,
+        firstName,
+        lastName,
+        auth?.csrfToken as string
+      )
       setMessage('User registered successfully. You can now log in.')
       setIsRegisterMode(false)
     } catch (error) {
