@@ -11,15 +11,25 @@ export const registerUser = async (
   username: string,
   password: string,
   first_name: string,
-  last_name: string
+  last_name: string,
+  csrfToken: string
 ) => {
   try {
-    const response = await axios.post(`${baseApiUrl}/api/auth/register/`, {
-      username,
-      password,
-      first_name,
-      last_name,
-    })
+    const response = await axios.post(
+      `${baseApiUrl}/api/auth/register/`,
+      {
+        username,
+        password,
+        first_name,
+        last_name,
+      },
+      {
+        headers: {
+          'X-CSRFToken': csrfToken || '', // Include the CSRF token
+        },
+        withCredentials: true, // Include cookies in the request (important for sessions)
+      }
+    )
     console.log(response.data.message)
   } catch (error) {
     const err = error as AxiosError<ErrorResponse> // Define the error response type
@@ -32,12 +42,23 @@ export const registerUser = async (
 }
 
 // Login User
-export const loginUser = async (username: string, password: string) => {
+export const loginUser = async (
+  username: string,
+  password: string,
+  csrfToken: string
+) => {
   try {
-    const response = await axios.post(`${baseApiUrl}/api/auth/login/`, {
-      username,
-      password,
-    })
+    const response = await axios.post(
+      `${baseApiUrl}/api/auth/login/`,
+      {
+        username,
+        password,
+      },
+      {
+        headers: { 'X-CSRFToken': csrfToken || '' },
+        withCredentials: true,
+      }
+    )
     alert(response.data.message)
     return response
   } catch (error) {
